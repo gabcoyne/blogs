@@ -48,6 +48,7 @@ with Flow(
         repo="gabcoyne/blogs",
         path="prefect-firewood/flow.py",
         access_token_secret="GITLAB_ACCESS_TOKEN",
+        ref="firewood-flow",
     ),
     schedule=CronSchedule(cron="0 7-18 * * *"),
 ) as flow:
