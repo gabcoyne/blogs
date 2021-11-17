@@ -47,7 +47,7 @@ with Flow(
     storage=GitHub(
         repo="gabcoyne/blogs",
         path="prefect-firewood/flow.py",
-        access_token_secret="GITHUB_ACCESS_TOKEN",
+        access_token_secret="GITHUB_PAT",
     ),
     schedule=CronSchedule(cron="0 7-18 * * *"),
 ) as flow:
