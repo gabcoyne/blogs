@@ -5,7 +5,7 @@ from prefect import task, Flow
 from prefect.tasks.secrets import PrefectSecret
 from prefect.client import Secret
 from datetime import timedelta
-from prefect.storage import GitLab
+from prefect.storage import GitHub
 from prefect.schedules import CronSchedule
 
 
@@ -44,11 +44,10 @@ def send_text(sms_number: str, data: List[tuple]):
 
 with Flow(
     "Free Firewood",
-    storage=GitLab(
+    storage=GitHub(
         repo="gabcoyne/blogs",
         path="prefect-firewood/flow.py",
-        access_token_secret="GITLAB_ACCESS_TOKEN",
-        ref="firewood-flow",
+        access_token_secret="GITHUB_ACCESS_TOKEN",
     ),
     schedule=CronSchedule(cron="0 7-18 * * *"),
 ) as flow:
