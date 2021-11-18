@@ -11,9 +11,9 @@ from prefect.schedules import CronSchedule
 
 @task(name="Find Downed Trees", max_retries=3, retry_delay=timedelta(minutes=1))
 def find_trees():
-    url = "https://data.cityofchicago.org/resource/mab8-y9h3.json?status=Open&ward=45"
+    url = "https://data.cityofchicago.org/resource/mab8-y9h3.json"
 
-    payload = {}
+    payload = {"status": "Open", "ward": "45"}
     headers = {}
     response = requests.request("GET", url, headers=headers, data=payload)
 
