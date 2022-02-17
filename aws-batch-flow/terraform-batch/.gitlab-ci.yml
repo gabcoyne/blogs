@@ -1,0 +1,72 @@
+stages:
+  - dev:terraform:check
+  - dev:terraform:plan
+  - dev:terraform:apply
+  - dev:terraform:destroy
+
+.dev-base-terraform:
+  image: 
+    name: "hashicorp/terraform"
+    entrypoint: [""]
+  variables:
+    TF_CLI_CONFIG_FILE: $CI_PROJECT_DIR/.terraformrc
+  before_script:
+    - echo -e "credentials \"gitlab.com\" {\n token = \"$CI_JOB_TOKEN\"\n}" > $TF_CLI_CONFIG_FILE
+    - export AWS_ACCESS_KEY_ID=${DEV_AWS_ACCESS_KEY_ID}
+    - export AWS_SECRET_ACCESS_KEY=${DEV_AWS_SECRET_ACCESS_KEY}
+    - terraform version
+
+tf-fmt:
+  stage: dev:terraform:check
+  extends: .dev-base-terraform
+  script:
+    - terraform fmt -check -recursive
+  needs: []
+  
+dev-tf-validate:
+  stage: dev:terraform:check
+  extends: .dev-base-terraform
+  script: 
+    - cd dev
+    - terraform init -input=false -backend=false
+    - terraform validate
+  needs: []
+
+dev-tf-plan:
+  stage: dev:terraform:plan
+  extends: .dev-base-terraform
+  script:
+    - cd dev
+    - terraform init -input=false 
+    - terraform plan -out=dev.tfplan
+  artifacts:
+    name: dev
+    paths:
+      - ./dev/*.tfplan
+      - ./dev/.terraform
+    expire_in: 1 week
+
+dev-tf-apply:
+  stage: dev:terraform:apply
+  extends: .dev-base-terraform
+  variables:
+    PLAN_FILE: dev.tfplan
+  script:
+    - cd dev
+    - terraform init -input=false 
+    - terraform apply -auto-approve ${PLAN_FILE}
+  environment:
+    name: aws
+    url: https://console.aws.amazon.com
+  rules:
+      - when: manual
+  allow_failure: true
+
+dev-tf-destroy:
+  stage: dev:terraform:destroy
+  extends: .dev-base-terraform
+  script:
+    - cd dev
+    - terraform init -input=false
+    - terraform destroy -auto-approve
+  when: manual

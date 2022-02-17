@@ -1,0 +1,23 @@
+{
+    "command": [
+        "cowsay",
+        "$COMMAND"
+    ],
+    "image": "docker/whalesay",
+    "memory": 256,
+    "vcpus": 1,
+    "volumes": [
+        {
+            "host": {
+                "sourcePath": "/home/ec2-user/data"
+            },
+            "name": "data"
+        }
+    ],
+    "environment": [],
+    "mountPoints": [],
+    "logConfiguration": {
+        "logDriver": "awslogs",
+        "awslogs-group": "demos/awslogs-prefect-flow"
+    }
+}

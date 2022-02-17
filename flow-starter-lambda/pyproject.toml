@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "flowrun-lambda"
+version = "0.1.0"
+description = ""
+authors = ["George Coyne <@gabcoyne>"]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.10"
+prefect = "^0.15.3"
+
+[tool.poetry.dev-dependencies]
+black = "^21.7b0"
+boto3 = "^1.18.57"
+ipython = "^7.29.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
