@@ -3,13 +3,13 @@
 module "batch_queue" {
   source = "../modules/batch-job-queue"
 
-  vpc_id             = "vpc-085b2437e72f8df56"
+  vpc_id             = "VPC_ID"
   queue_name         = "whalesay-queue"
   environment        = "dev"
   instance_type      = ["m5"]
   min_cpus           = 0
   max_cpus           = 2
-  private_subnet_ids = ["subnet-04f3a1067aa17aa84"] #module.network.private_subnets_ids
+  private_subnet_ids = ["SUBNET_ID"] #module.network.private_subnets_ids
   tags = {
     "Name"     = "whalesay"
     "Platform" = "awsbatch",
@@ -27,6 +27,6 @@ module "whalesay_batch_job" {
 
   tags = {
     "Platform" = "awsbatch",
-    "Pipeline" = "whalesay-nf"
+    "Pipeline" = "whalesay"
   }
 }

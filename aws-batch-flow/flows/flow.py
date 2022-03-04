@@ -8,12 +8,18 @@ from prefect.utilities.aws import get_boto_client
 from prefect.backend.artifacts import create_link_artifact
 import prefect
 import json
+import random
 
 batch_submit = BatchSubmit()
 
-batch_observer = AWSClientWait(
-    client="batch"
-)
+
+@task
+def batch_run_name(partner_id: str):
+    return f"{partner_id}_{prefect.context.flow_run_name}"
+
+
+batch_observer = AWSClientWait(client="batch")
+
 
 @task(max_retries=3, retry_delay=timedelta(seconds=30))
 def get_log_stream_name(job_id):
@@ -24,42 +30,54 @@ def get_log_stream_name(job_id):
         json.dump(response, j)
     logStreamName = response["jobs"][0]["attempts"][0]["container"]["logStreamName"]
     if logStreamName:
-        create_link_artifact(f"https://console.aws.amazon.com/cloudwatch/home?#logsV2:log-groups/{logStreamName}")
+        create_link_artifact(
+            f"https://console.aws.amazon.com/cloudwatch/home?#logsV2:log-groups/{logStreamName}"
+        )
         print(f"Found logs at {logStreamName}")
 
+
+@task
+def print_context():
+    print(prefect.context.__dict__)
+
+
 with Flow("batch-jobs") as flow:
-    cowsay = Parameter(name="cowsay", default="segmint")
+    phrase = Parameter("phrase", default="0")
+
+    batch_job_name = batch_run_name(phrase)
     batch_job_cowsay = batch_submit(
-        job_name="whalesay-demo",
+        job_name=batch_job_name,
         job_definition="whalesay",
         job_queue="whalesay-queue",
         batch_kwargs={
             "containerOverrides": {
-                "environment": [{"name": "COMMAND", "value": cowsay}],
                 "vcpus": 1,
                 "memory": 128,
             },
+            "parameters": {"phrase": phrase},
         },
         task_args=dict(log_stdout=True),
     )
     complete_job = batch_observer(
         task_args=dict(name="Running Job Waiter"),
-            waiter_name="JobComplete",
+        waiter_name="JobComplete",
         waiter_kwargs={
             "jobs": [batch_job_cowsay],
             "WaiterConfig": {"Delay": 10, "MaxAttempts": 10},
-        }
+        },
     )
-    log_artifact_waiter  = batch_observer(
-         task_args=dict(trigger=prefect.triggers.always_run, name="Running Job Waiter"),
-            waiter_name="JobRunning",
+    log_artifact_waiter = batch_observer(
+        task_args=dict(trigger=prefect.triggers.always_run, name="Running Job Waiter"),
+        waiter_name="JobRunning",
         waiter_kwargs={
             "jobs": [batch_job_cowsay],
             "WaiterConfig": {"Delay": 10, "MaxAttempts": 10},
-        }
+        },
     )
-    
-    log_artifact = get_log_stream_name(batch_job_cowsay,upstream_tasks=[log_artifact_waiter])
+
+    log_artifact = get_log_stream_name(
+        batch_job_cowsay, upstream_tasks=[log_artifact_waiter]
+    )
 
 if __name__ == "__main__":
     flow.run()

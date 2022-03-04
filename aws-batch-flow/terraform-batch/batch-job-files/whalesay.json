@@ -1,7 +1,7 @@
 {
     "command": [
         "cowsay",
-        "$COMMAND"
+        "Ref::phrase"
     ],
     "image": "docker/whalesay",
     "memory": 256,
