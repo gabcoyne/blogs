@@ -1,6 +1,6 @@
 service: flow-starter-lambda
 
-frameworkVersion: "3"
+frameworkVersion: "2"
 
 provider:
   name: aws
@@ -47,4 +47,4 @@ custom:
   pythonRequirements:
     dockerizePip: non-linux
     layer: true
-  messageBucket: a-bucket.${opt:stage, 'dev'}.prefect.io
+  messageBucket: a-demo-bucket.${opt:stage, 'dev'}.prefect.io
