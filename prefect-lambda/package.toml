@@ -1,3 +1,0 @@
-[package]
-storage-type= "s3"
-bucket="sddfa"

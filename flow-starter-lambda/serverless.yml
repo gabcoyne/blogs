@@ -1,6 +1,6 @@
-service: flow
+service: flow-starter-lambda
 
-frameworkVersion: "2"
+frameworkVersion: "3"
 
 provider:
   name: aws
@@ -25,7 +25,7 @@ provider:
         - arn:aws:s3:::${self:custom.messageBucket}/*
         - arn:aws:s3:::${self:custom.messageBucket}
 functions:
-  starter:
+  flow-starter:
     handler: handler.run
     layers:
       - { Ref: PythonRequirementsLambdaLayer }
@@ -34,12 +34,12 @@ functions:
           bucket: ${self:custom.messageBucket}
           event: s3:ObjectCreated:*
           rules:
-            - prefix: */raw_files/
+            - prefix: raw_files/
             - suffix: .json
     environment:
       STAGE: ${opt:stage, 'dev'}
       PREFECT_API_URL: https://api.prefect.io/graphql
-      PREFECT_VERSION_GROUP_ID: 1bd38827-3c57-417b-b310-a9fe083b6a
+      PREFECT_VERSION_GROUP_ID: 1bd38827-3c57-417b-b310-a9fe34083b6a
 
 plugins:
   - serverless-python-requirements
@@ -47,4 +47,4 @@ custom:
   pythonRequirements:
     dockerizePip: non-linux
     layer: true
-  messageBucket: ${opt:stage, 'dev'}.proteona-external-seqdata
+  messageBucket: a-bucket.${opt:stage, 'dev'}.prefect.io

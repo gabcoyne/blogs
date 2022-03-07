@@ -3,7 +3,7 @@ import logging
 import os
 import typing
 from datetime import datetime
-from botocore.errorfactory import ClientError
+
 import boto3
 import prefect
 from prefect.run_configs.kubernetes import KubernetesRun
@@ -44,17 +44,19 @@ def trigger_flow_run(
     )
 
 
-def checkfiles(bucket_name: str, lines: list):
-    for hash, path in lines:
-        prefix = "novogene/X401SC21083527-Z01-F001"
-        s3 = boto3.client("s3")
-        key = f"{prefix}/{path}"
-        try:
-            s3.head_object(Bucket=bucket_name, Key=key)
-            print("Found file")
-        except ClientError:
-            raise ValueError(f"File {key} not found")
-    return True
+def get_memory_required(s3_key: str, s3_bucket: str):
+    default_memory_required = 100000
+    try:
+        memory_required = 0
+        bucket = s3_key["loc"].replace("s3://", "").split("/")[0]
+        key = s3_key["loc"].replace(f"s3://{bucket}/", "")
+        print(s3_bucket, key)
+        for key in s3_client.list_objects(Bucket=s3_bucket, Prefix=key)["Contents"]:
+            memory_required = memory_required + key["Size"]
+        return memory_required
+    except Exception as ex:
+        print(ex)
+        return default_memory_required
 
 
 def run(event, context):
@@ -63,7 +65,9 @@ def run(event, context):
     logger.info(f"Received message via object {s3_key} in bucket {s3_bucket}")
 
     prefect_response = trigger_flow_run(
-        # Assorted parameters for pre-processing
+        bucket_name=s3_bucket,
+        s3_key=s3_key,
+        memory_request=get_memory_required(s3_key=s3_key, s3_bucket=s3_bucket),
     )
 
     logger.info(f"Flow Run ID: {prefect_response}")
